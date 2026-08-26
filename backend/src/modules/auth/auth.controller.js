@@ -51,3 +51,9 @@ export const login = async (req, res, next) => {
     next(error);
   }
 };
+export const me = (req, res) => {
+  res.status(200).json({
+    success: true,
+    user: req.user,
+  });
+};
