@@ -4,6 +4,7 @@ import helmet from "helmet";
 import authRoutes from "./modules/auth/auth.routes.js";
 
 import { checkDatabaseConnection } from "./config/database.js";
+import customerRoutes from "./modules/customers/customer.routes.js";
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use(
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: false, limit: "50kb" }));
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/customers", customerRoutes);
 
 app.get("/api/v1/health", async (req, res) => {
   try {
