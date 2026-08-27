@@ -1,31 +1,30 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import authRoutes from "./modules/auth/auth.routes.js";
 
 import { checkDatabaseConnection } from "./config/database.js";
+
+import authRoutes from "./modules/auth/auth.routes.js";
 import customerRoutes from "./modules/customers/customer.routes.js";
+import riderRoutes from "./modules/riders/rider.routes.js";
 import rideRoutes from "./modules/rides/ride.routes.js";
+
 const app = express();
 
-app.disable("x-powered-by");
-
-app.use(helmet());
+app.use(
+  helmet()
+);
 
 app.use(
   cors({
     origin: process.env.CORS_ORIGINS
-      ?.split(",")
-      .map((origin) => origin.trim()),
+      ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
+      : true,
     credentials: true,
   })
 );
 
-app.use(express.json({ limit: "100kb" }));
-app.use(express.urlencoded({ extended: false, limit: "50kb" }));
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/customers", customerRoutes);
-app.use("/api/v1/rides", rideRoutes);
+app.use(express.json());
 
 app.get("/api/v1/health", async (req, res) => {
   try {
@@ -34,11 +33,11 @@ app.get("/api/v1/health", async (req, res) => {
     res.status(200).json({
       success: true,
       api: "ok",
-      database: "ok",
+      database: database ? "ok" : "unavailable",
       time: database.now,
     });
   } catch (error) {
-    console.error("Health check failed:", error);
+    console.error(error);
 
     res.status(503).json({
       success: false,
@@ -47,6 +46,11 @@ app.get("/api/v1/health", async (req, res) => {
     });
   }
 });
+
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/customers", customerRoutes);
+app.use("/api/v1/riders", riderRoutes);
+app.use("/api/v1/rides", rideRoutes);
 
 app.use((error, req, res, next) => {
   console.error(error);
@@ -63,6 +67,13 @@ app.use((error, req, res, next) => {
       success: false,
       message: "Invalid request data.",
       errors: error.issues,
+    });
+  }
+
+  if (error.statusCode) {
+    return res.status(error.statusCode).json({
+      success: false,
+      message: error.message,
     });
   }
 
