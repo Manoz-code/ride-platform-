@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 
 import {
@@ -11,6 +10,13 @@ import {
   addMyVehicle,
   updateMyVehicle,
 } from "./vehicle.controller.js";
+
+import {
+  getMyAvailableRides,
+  acceptMyRide,
+  startMyRide,
+  completeMyRide,
+} from "./rider-ride.controller.js";
 
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { requireRole } from "../../middleware/role.middleware.js";
@@ -50,6 +56,36 @@ router.patch(
   requireAuth,
   requireRole("rider"),
   updateMyVehicle
+);
+
+// Rider ride management
+
+router.get(
+  "/rides",
+  requireAuth,
+  requireRole("rider"),
+  getMyAvailableRides
+);
+
+router.patch(
+  "/rides/:rideId/accept",
+  requireAuth,
+  requireRole("rider"),
+  acceptMyRide
+);
+
+router.patch(
+  "/rides/:rideId/start",
+  requireAuth,
+  requireRole("rider"),
+  startMyRide
+);
+
+router.patch(
+  "/rides/:rideId/complete",
+  requireAuth,
+  requireRole("rider"),
+  completeMyRide
 );
 
 export default router;

@@ -30,6 +30,8 @@ export const requireAuth = async (req, res, next) => {
 
     next();
   } catch (error) {
+    console.error("AUTH TOKEN ERROR:", error);
+
     return res.status(401).json({
       success: false,
       message: "Invalid or expired access token.",
