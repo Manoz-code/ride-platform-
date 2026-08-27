@@ -21,8 +21,10 @@ export const getRiderByUserId = async (userId) => {
   return result.rows[0] || null;
 };
 
-
-export const updateRiderAvailability = async (userId, availabilityStatus) => {
+export const updateRiderAvailability = async (
+  userId,
+  availabilityStatus
+) => {
   const riderResult = await query(
     `
       SELECT
@@ -51,6 +53,19 @@ export const updateRiderAvailability = async (userId, availabilityStatus) => {
     );
 
     error.statusCode = 403;
+
+    throw error;
+  }
+
+  if (
+    availabilityStatus === "offline" &&
+    rider.availability_status === "busy"
+  ) {
+    const error = new Error(
+      "Rider cannot go offline while handling an active ride."
+    );
+
+    error.statusCode = 409;
 
     throw error;
   }

@@ -80,25 +80,26 @@ export const acceptRide = async (userId, rideId) => {
   }
 
   const activeRideResult = await query(
-  `
-    SELECT id, status
-    FROM rides
-    WHERE rider_id = $1
-      AND status IN ('accepted', 'in_progress')
-    LIMIT 1
-  `,
-  [rider.id]
-);
-
-if (activeRideResult.rows[0]) {
-  const error = new Error(
-    "Rider already has an active ride."
+    `
+      SELECT
+        id,
+        status
+      FROM rides
+      WHERE rider_id = $1
+        AND status IN ('accepted', 'in_progress')
+      LIMIT 1
+    `,
+    [rider.id]
   );
 
-  error.statusCode = 409;
+  if (activeRideResult.rows[0]) {
+    const error = new Error(
+      "Rider already has an active ride."
+    );
 
-  throw error;
-}
+    error.statusCode = 409;
+    throw error;
+  }
 
   const result = await query(
     `
@@ -133,7 +134,24 @@ if (activeRideResult.rows[0]) {
     [rider.id, rideId]
   );
 
-  return result.rows[0] || null;
+  const ride = result.rows[0];
+
+  if (!ride) {
+    return null;
+  }
+
+  await query(
+    `
+      UPDATE riders
+      SET
+        availability_status = 'busy',
+        updated_at = NOW()
+      WHERE id = $1
+    `,
+    [rider.id]
+  );
+
+  return ride;
 };
 
 export const startRide = async (userId, rideId) => {
@@ -217,5 +235,22 @@ export const completeRide = async (userId, rideId) => {
     [rideId, rider.id]
   );
 
-  return result.rows[0] || null;
+  const ride = result.rows[0];
+
+  if (!ride) {
+    return null;
+  }
+
+  await query(
+    `
+      UPDATE riders
+      SET
+        availability_status = 'online',
+        updated_at = NOW()
+      WHERE id = $1
+    `,
+    [rider.id]
+  );
+
+  return ride;
 };
