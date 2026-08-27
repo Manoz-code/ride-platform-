@@ -18,3 +18,25 @@ export const getCustomerByUserId = async (userId) => {
 
   return result.rows[0] || null;
 };
+
+
+export const updateCustomerByUserId = async (userId, fullName) => {
+  const result = await query(
+    `
+      UPDATE customers
+      SET
+        full_name = $1,
+        updated_at = NOW()
+      WHERE user_id = $2
+      RETURNING
+        id,
+        user_id,
+        full_name,
+        created_at,
+        updated_at
+    `,
+    [fullName, userId]
+  );
+
+  return result.rows[0] || null;
+};
