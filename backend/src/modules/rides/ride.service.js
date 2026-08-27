@@ -239,7 +239,7 @@ export const cancelCustomerRide = async (userId, rideId) => {
         updated_at = NOW()
       WHERE id = $1
         AND customer_id = $2
-        AND status = 'requested'
+        AND status IN ('requested', 'accepted')
       RETURNING
         id,
         customer_id,
