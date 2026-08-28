@@ -1,4 +1,50 @@
-import { query } from "../../config/database.js";
+
+import pool, { query } from "../../config/database.js";
+
+export const recordRideStatusChange = async ({
+  rideId,
+  status,
+  changedByUserId,
+  changedByRole,
+}) => {
+  await query(
+    `
+      INSERT INTO ride_status_history (
+        ride_id,
+        status,
+        changed_by_user_id,
+        changed_by_role
+      )
+      VALUES ($1, $2, $3, $4)
+    `,
+    [
+      rideId,
+      status,
+      changedByUserId,
+      changedByRole,
+    ]
+  );
+};
+
+const RIDE_COLUMNS = `
+  id,
+  customer_id,
+  rider_id,
+  pickup_address,
+  pickup_latitude,
+  pickup_longitude,
+  dropoff_address,
+  dropoff_latitude,
+  dropoff_longitude,
+  status,
+  requested_at,
+  accepted_at,
+  started_at,
+  completed_at,
+  cancelled_at,
+  created_at,
+  updated_at
+`;
 
 export const createRide = async ({
   customerId,
@@ -9,64 +55,78 @@ export const createRide = async ({
   dropoffLatitude,
   dropoffLongitude,
 }) => {
- const customerResult = await query(
-  `
-    SELECT id
-    FROM customers
-    WHERE user_id = $1
-    LIMIT 1
-  `,
-  [customerId]
-);
+  const client = await pool.connect();
 
-const customer = customerResult.rows[0];
+  try {
+    await client.query("BEGIN");
 
-if (!customer) {
-  return null;
-}
-  const result = await query(
-    `
-      INSERT INTO rides (
-        customer_id,
-        pickup_address,
-        pickup_latitude,
-        pickup_longitude,
-        dropoff_address,
-        dropoff_latitude,
-        dropoff_longitude
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING
-        id,
-        customer_id,
-        rider_id,
-        pickup_address,
-        pickup_latitude,
-        pickup_longitude,
-        dropoff_address,
-        dropoff_latitude,
-        dropoff_longitude,
-        status,
-        requested_at,
-        accepted_at,
-        started_at,
-        completed_at,
-        cancelled_at,
-        created_at,
-        updated_at
-    `,
-   [
-  customer.id,
-  pickupAddress,
-  pickupLatitude,
-  pickupLongitude,
-  dropoffAddress,
-  dropoffLatitude,
-  dropoffLongitude,
-]
-  );
+    const customerResult = await client.query(
+      `
+        SELECT id
+        FROM customers
+        WHERE user_id = $1
+        LIMIT 1
+      `,
+      [customerId]
+    );
 
-  return result.rows[0];
+    const customer = customerResult.rows[0];
+
+    if (!customer) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    const rideResult = await client.query(
+      `
+        INSERT INTO rides (
+          customer_id,
+          pickup_address,
+          pickup_latitude,
+          pickup_longitude,
+          dropoff_address,
+          dropoff_latitude,
+          dropoff_longitude
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING
+          ${RIDE_COLUMNS}
+      `,
+      [
+        customer.id,
+        pickupAddress,
+        pickupLatitude,
+        pickupLongitude,
+        dropoffAddress,
+        dropoffLatitude,
+        dropoffLongitude,
+      ]
+    );
+
+    const ride = rideResult.rows[0];
+
+    await client.query(
+      `
+        INSERT INTO ride_status_history (
+          ride_id,
+          status,
+          changed_by_user_id,
+          changed_by_role
+        )
+        VALUES ($1, 'requested', $2, 'customer')
+      `,
+      [ride.id, customerId]
+    );
+
+    await client.query("COMMIT");
+
+    return ride;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 };
 
 export const getCustomerRides = async (userId) => {
@@ -89,23 +149,7 @@ export const getCustomerRides = async (userId) => {
   const ridesResult = await query(
     `
       SELECT
-        id,
-        customer_id,
-        rider_id,
-        pickup_address,
-        pickup_latitude,
-        pickup_longitude,
-        dropoff_address,
-        dropoff_latitude,
-        dropoff_longitude,
-        status,
-        requested_at,
-        accepted_at,
-        started_at,
-        completed_at,
-        cancelled_at,
-        created_at,
-        updated_at
+        ${RIDE_COLUMNS}
       FROM rides
       WHERE customer_id = $1
       ORDER BY created_at DESC
@@ -115,7 +159,6 @@ export const getCustomerRides = async (userId) => {
 
   return ridesResult.rows;
 };
-
 
 export const getCustomerRideById = async (userId, rideId) => {
   const customerResult = await query(
@@ -180,7 +223,25 @@ export const getCustomerRideById = async (userId, rideId) => {
               'model', v.model
             )
           ELSE NULL
-        END AS vehicle
+        END AS vehicle,
+
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object(
+                'id', h.id,
+                'status', h.status,
+                'changedByUserId', h.changed_by_user_id,
+                'changedByRole', h.changed_by_role,
+                'createdAt', h.created_at
+              )
+              ORDER BY h.created_at ASC
+            )
+            FROM ride_status_history h
+            WHERE h.ride_id = r.id
+          ),
+          '[]'::json
+        ) AS status_history
 
       FROM rides r
 
@@ -213,54 +274,86 @@ export const getCustomerRideById = async (userId, rideId) => {
 
   return rideResult.rows[0] || null;
 };
+
 export const cancelCustomerRide = async (userId, rideId) => {
-  const customerResult = await query(
-    `
-      SELECT id
-      FROM customers
-      WHERE user_id = $1
-      LIMIT 1
-    `,
-    [userId]
-  );
+  const client = await pool.connect();
 
-  const customer = customerResult.rows[0];
+  try {
+    await client.query("BEGIN");
 
-  if (!customer) {
-    return null;
+    const customerResult = await client.query(
+      `
+        SELECT id
+        FROM customers
+        WHERE user_id = $1
+        LIMIT 1
+      `,
+      [userId]
+    );
+
+    const customer = customerResult.rows[0];
+
+    if (!customer) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    const rideResult = await client.query(
+      `
+        UPDATE rides
+        SET
+          status = 'cancelled',
+          cancelled_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1
+          AND customer_id = $2
+          AND status IN ('requested', 'accepted')
+        RETURNING
+          ${RIDE_COLUMNS}
+      `,
+      [rideId, customer.id]
+    );
+
+    const ride = rideResult.rows[0];
+
+    if (!ride) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    await client.query(
+      `
+        INSERT INTO ride_status_history (
+          ride_id,
+          status,
+          changed_by_user_id,
+          changed_by_role
+        )
+        VALUES ($1, 'cancelled', $2, 'customer')
+      `,
+      [ride.id, userId]
+    );
+
+    if (ride.rider_id) {
+      await client.query(
+        `
+          UPDATE riders
+          SET
+            availability_status = 'online',
+            updated_at = NOW()
+          WHERE id = $1
+        `,
+        [ride.rider_id]
+      );
+    }
+
+    await client.query("COMMIT");
+
+    return ride;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
   }
-
-  const rideResult = await query(
-    `
-      UPDATE rides
-      SET
-        status = 'cancelled',
-        cancelled_at = NOW(),
-        updated_at = NOW()
-      WHERE id = $1
-        AND customer_id = $2
-        AND status IN ('requested', 'accepted')
-      RETURNING
-        id,
-        customer_id,
-        rider_id,
-        pickup_address,
-        pickup_latitude,
-        pickup_longitude,
-        dropoff_address,
-        dropoff_latitude,
-        dropoff_longitude,
-        status,
-        requested_at,
-        accepted_at,
-        started_at,
-        completed_at,
-        cancelled_at,
-        created_at,
-        updated_at
-    `,
-    [rideId, customer.id]
-  );
-
-  return rideResult.rows[0] || null;
 };

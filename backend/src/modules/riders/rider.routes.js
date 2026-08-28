@@ -16,6 +16,7 @@ import {
   acceptMyRide,
   startMyRide,
   completeMyRide,
+  cancelMyRide,
 } from "./rider-ride.controller.js";
 
 import { requireAuth } from "../../middleware/auth.middleware.js";
@@ -86,6 +87,13 @@ router.patch(
   requireAuth,
   requireRole("rider"),
   completeMyRide
+);
+
+router.patch(
+  "/rides/:rideId/cancel",
+  requireAuth,
+  requireRole("rider"),
+  cancelMyRide
 );
 
 export default router;

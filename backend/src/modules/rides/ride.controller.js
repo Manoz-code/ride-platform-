@@ -53,10 +53,7 @@ export const getMyRides = async (req, res, next) => {
 
 export const getMyRideById = async (req, res, next) => {
   try {
-    const ride = await getCustomerRideById(
-      req.user.id,
-      req.params.id
-    );
+    const ride = await getCustomerRideById(req.user.id, req.params.id);
 
     if (!ride) {
       return res.status(404).json({
@@ -76,10 +73,7 @@ export const getMyRideById = async (req, res, next) => {
 
 export const cancelMyRide = async (req, res, next) => {
   try {
-    const ride = await cancelCustomerRide(
-      req.user.id,
-      req.params.id
-    );
+    const ride = await cancelCustomerRide(req.user.id, req.params.id);
 
     if (!ride) {
       return res.status(404).json({

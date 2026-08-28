@@ -38,5 +38,4 @@ router.patch(
   cancelMyRide
 );
 
-
 export default router;

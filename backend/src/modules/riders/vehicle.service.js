@@ -11,6 +11,9 @@ export const getVehiclesByUserId = async (userId) => {
         v.brand,
         v.model,
         v.status,
+        v.verification_status,
+        v.verified_at,
+        v.verification_notes,
         v.created_at,
         v.updated_at
       FROM vehicles v
@@ -63,6 +66,9 @@ export const createVehicle = async (
         brand,
         model,
         status,
+        verification_status,
+        verified_at,
+        verification_notes,
         created_at,
         updated_at
     `,
@@ -85,6 +91,12 @@ export const updateVehicle = async (
 ) => {
   const fields = [];
   const values = [];
+
+  const requiresReapproval =
+    data.type !== undefined ||
+    data.plateNumber !== undefined ||
+    data.brand !== undefined ||
+    data.model !== undefined;
 
   if (data.type !== undefined) {
     values.push(data.type);
@@ -109,6 +121,12 @@ export const updateVehicle = async (
   if (data.status !== undefined) {
     values.push(data.status);
     fields.push(`status = $${values.length}`);
+  }
+
+  if (requiresReapproval) {
+    fields.push(`verification_status = 'pending'`);
+    fields.push(`verified_at = NULL`);
+    fields.push(`verification_notes = NULL`);
   }
 
   if (fields.length === 0) {
@@ -136,6 +154,9 @@ export const updateVehicle = async (
         v.brand,
         v.model,
         v.status,
+        v.verification_status,
+        v.verified_at,
+        v.verification_notes,
         v.created_at,
         v.updated_at
     `,

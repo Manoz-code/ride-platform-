@@ -8,6 +8,8 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import customerRoutes from "./modules/customers/customer.routes.js";
 import riderRoutes from "./modules/riders/rider.routes.js";
 import rideRoutes from "./modules/rides/ride.routes.js";
+import adminRoutes from "./modules/admin/admin.routes.js";
+
 
 const app = express();
 
@@ -51,16 +53,25 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/customers", customerRoutes);
 app.use("/api/v1/riders", riderRoutes);
 app.use("/api/v1/rides", rideRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 app.use((error, req, res, next) => {
   console.error(error);
 
-  if (error.code === "23505") {
+if (error.code === "23505") {
+  if (error.constraint === "fare_rules_one_active_per_market_service_idx") {
     return res.status(409).json({
       success: false,
-      message: "An account with this information already exists.",
+      message:
+        "An active fare rule already exists for this market and service type.",
     });
   }
+
+  return res.status(409).json({
+    success: false,
+    message: "A record with this information already exists.",
+  });
+}
 
   if (error.name === "ZodError") {
     return res.status(400).json({
