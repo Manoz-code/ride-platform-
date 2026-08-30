@@ -1,5 +1,6 @@
 
 import pool, { query } from "../../config/database.js";
+import { emitToRiders } from "../../realtime/socket.js";
 
 export const recordRideStatusChange = async ({
   rideId,
@@ -17,12 +18,7 @@ export const recordRideStatusChange = async ({
       )
       VALUES ($1, $2, $3, $4)
     `,
-    [
-      rideId,
-      status,
-      changedByUserId,
-      changedByRole,
-    ]
+    [rideId, status, changedByUserId, changedByRole]
   );
 };
 
@@ -119,6 +115,12 @@ export const createRide = async ({
     );
 
     await client.query("COMMIT");
+
+    // Notify all connected riders only after the ride
+    // and its initial status history have been committed.
+    emitToRiders("ride:requested", {
+      ride,
+    });
 
     return ride;
   } catch (error) {
@@ -357,3 +359,4 @@ export const cancelCustomerRide = async (userId, rideId) => {
     client.release();
   }
 };
+
