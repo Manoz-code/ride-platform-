@@ -1,4 +1,5 @@
 import pool, { query } from "../../config/database.js";
+import { emitToUser } from "../../realtime/socket.js";
 
 const RIDE_COLUMNS = `
   id,
@@ -197,9 +198,27 @@ export const acceptRide = async (userId, rideId) => {
       [rider.id]
     );
 
-    await client.query("COMMIT");
+ await client.query("COMMIT");
 
-    return ride;
+const customerUserResult = await query(
+  `
+    SELECT user_id
+    FROM customers
+    WHERE id = $1
+    LIMIT 1
+  `,
+  [ride.customer_id]
+);
+
+const customerUserId = customerUserResult.rows[0]?.user_id;
+
+if (customerUserId) {
+  emitToUser(customerUserId, "ride:accepted", {
+    ride,
+  });
+}
+
+return ride;
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
