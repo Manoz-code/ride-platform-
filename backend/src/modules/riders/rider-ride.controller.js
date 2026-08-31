@@ -1,3 +1,4 @@
+
 import {
   getAvailableRides,
   acceptRide,
@@ -5,6 +6,22 @@ import {
   completeRide,
   cancelRide,
 } from "./rider-ride.service.js";
+
+import { rideIdParamSchema } from "./rider.validation.js";
+
+const validateRideId = (req, res) => {
+  const result = rideIdParamSchema.safeParse(req.params);
+
+  if (!result.success) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid ride ID.",
+      errors: result.error.flatten().fieldErrors,
+    });
+  }
+
+  return result.data.rideId;
+};
 
 export const getMyAvailableRides = async (req, res, next) => {
   try {
@@ -17,7 +34,7 @@ export const getMyAvailableRides = async (req, res, next) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       rides,
     });
@@ -28,9 +45,15 @@ export const getMyAvailableRides = async (req, res, next) => {
 
 export const acceptMyRide = async (req, res, next) => {
   try {
+    const rideId = validateRideId(req, res);
+
+    if (!rideId) {
+      return;
+    }
+
     const ride = await acceptRide(
       req.user.id,
-      req.params.rideId
+      rideId
     );
 
     if (!ride) {
@@ -40,7 +63,7 @@ export const acceptMyRide = async (req, res, next) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Ride accepted successfully.",
       ride,
@@ -52,9 +75,15 @@ export const acceptMyRide = async (req, res, next) => {
 
 export const startMyRide = async (req, res, next) => {
   try {
+    const rideId = validateRideId(req, res);
+
+    if (!rideId) {
+      return;
+    }
+
     const ride = await startRide(
       req.user.id,
-      req.params.rideId
+      rideId
     );
 
     if (!ride) {
@@ -64,7 +93,7 @@ export const startMyRide = async (req, res, next) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Ride started successfully.",
       ride,
@@ -76,9 +105,15 @@ export const startMyRide = async (req, res, next) => {
 
 export const completeMyRide = async (req, res, next) => {
   try {
+    const rideId = validateRideId(req, res);
+
+    if (!rideId) {
+      return;
+    }
+
     const ride = await completeRide(
       req.user.id,
-      req.params.rideId
+      rideId
     );
 
     if (!ride) {
@@ -88,7 +123,7 @@ export const completeMyRide = async (req, res, next) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Ride completed successfully.",
       ride,
@@ -100,9 +135,15 @@ export const completeMyRide = async (req, res, next) => {
 
 export const cancelMyRide = async (req, res, next) => {
   try {
+    const rideId = validateRideId(req, res);
+
+    if (!rideId) {
+      return;
+    }
+
     const ride = await cancelRide(
       req.user.id,
-      req.params.rideId
+      rideId
     );
 
     if (!ride) {
@@ -112,7 +153,7 @@ export const cancelMyRide = async (req, res, next) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Ride cancelled successfully.",
       ride,

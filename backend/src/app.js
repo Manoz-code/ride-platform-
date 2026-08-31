@@ -58,20 +58,29 @@ app.use("/api/v1/admin", adminRoutes);
 app.use((error, req, res, next) => {
   console.error(error);
 
-if (error.code === "23505") {
-  if (error.constraint === "fare_rules_one_active_per_market_service_idx") {
-    return res.status(409).json({
-      success: false,
-      message:
-        "An active fare rule already exists for this market and service type.",
-    });
+  // If the response has already been sent,
+  // let Express handle the error.
+  if (res.headersSent) {
+    return next(error);
   }
 
-  return res.status(409).json({
-    success: false,
-    message: "A record with this information already exists.",
-  });
-}
+  if (error.code === "23505") {
+    if (
+      error.constraint ===
+      "fare_rules_one_active_per_market_service_idx"
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "An active fare rule already exists for this market and service type.",
+      });
+    }
+
+    return res.status(409).json({
+      success: false,
+      message: "A record with this information already exists.",
+    });
+  }
 
   if (error.name === "ZodError") {
     return res.status(400).json({
@@ -88,7 +97,7 @@ if (error.code === "23505") {
     });
   }
 
-  res.status(500).json({
+  return res.status(500).json({
     success: false,
     message: "Internal server error.",
   });

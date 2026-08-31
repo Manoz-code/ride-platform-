@@ -40,6 +40,7 @@ export const initSocket = (httpServer) => {
 
     socket.join(`user:${id}`);
 
+    console.log(`Socket room joined: user:${id}`);
     if (role === "customer") {
       socket.join("customers");
     }
