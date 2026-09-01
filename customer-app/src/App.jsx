@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import RequestRide from "./pages/RequestRide.jsx";
+import MyRides from "./pages/MyRides.jsx";
 
 import { getMe } from "./services/auth.service.js";
 import {
@@ -48,11 +49,16 @@ function App() {
     clearAuth();
     setUser(null);
     setPage("dashboard");
+    setCreatedRide(null);
   };
 
   const handleRideCreated = (ride) => {
     setCreatedRide(ride);
     setPage("dashboard");
+  };
+
+  const handleViewRide = (rideId) => {
+    console.log("View ride:", rideId);
   };
 
   if (loading) {
@@ -83,11 +89,21 @@ function App() {
     );
   }
 
+  if (page === "my-rides") {
+    return (
+      <MyRides
+        onBack={() => setPage("dashboard")}
+        onViewRide={handleViewRide}
+      />
+    );
+  }
+
   return (
     <Dashboard
       user={user}
       onLogout={handleLogout}
       onRequestRide={() => setPage("request-ride")}
+      onMyRides={() => setPage("my-rides")}
       createdRide={createdRide}
     />
   );

@@ -5,17 +5,12 @@ function Dashboard({
   user,
   onLogout,
   onRequestRide,
+  onMyRides,
   createdRide,
 }) {
   const handleLogout = () => {
     clearAuth();
     onLogout();
-  };
-
-  const handleRequestRide = () => {
-    if (typeof onRequestRide === "function") {
-      onRequestRide();
-    }
   };
 
   return (
@@ -58,6 +53,24 @@ function Dashboard({
           </p>
         </div>
 
+        {createdRide && (
+          <div className="ride-created-message">
+            <div>
+              <strong>Ride requested successfully!</strong>
+              <p>
+                Your ride is now waiting for a nearby rider.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={onMyRides}
+            >
+              View My Rides
+            </button>
+          </div>
+        )}
+
         <section className="request-card">
           <div className="request-icon">📍</div>
 
@@ -65,49 +78,25 @@ function Dashboard({
             <h3>Ready for a ride?</h3>
 
             <p>
-              Request a ride and find a nearby rider
-              quickly.
+              Request a ride and find a nearby rider quickly.
             </p>
 
             <button
               type="button"
               className="request-button"
-              onClick={handleRequestRide}
+              onClick={onRequestRide}
             >
               Request a Ride
             </button>
           </div>
         </section>
 
-        {createdRide && (
-          <section className="ride-created-card">
-            <div className="ride-created-icon">✓</div>
-
-            <div>
-              <h3>Ride requested successfully</h3>
-
-              <p>
-                Your ride has been created and nearby
-                riders have been notified.
-              </p>
-
-              <div className="ride-created-details">
-                <span>
-                  <strong>Status:</strong>{" "}
-                  {createdRide.status}
-                </span>
-
-                <span>
-                  <strong>Ride ID:</strong>{" "}
-                  {createdRide.id}
-                </span>
-              </div>
-            </div>
-          </section>
-        )}
-
         <section className="dashboard-grid">
-          <div className="dashboard-card">
+          <button
+            type="button"
+            className="dashboard-card dashboard-card-button"
+            onClick={onRequestRide}
+          >
             <span className="card-icon">🚗</span>
 
             <h3>Book a Ride</h3>
@@ -115,17 +104,13 @@ function Dashboard({
             <p>
               Choose your pickup and destination.
             </p>
+          </button>
 
-            <button
-              type="button"
-              className="card-action"
-              onClick={handleRequestRide}
-            >
-              Book now
-            </button>
-          </div>
-
-          <div className="dashboard-card">
+          <button
+            type="button"
+            className="dashboard-card dashboard-card-button"
+            onClick={onMyRides}
+          >
             <span className="card-icon">📋</span>
 
             <h3>My Rides</h3>
@@ -133,16 +118,12 @@ function Dashboard({
             <p>
               View your previous and active rides.
             </p>
+          </button>
 
-            <button
-              type="button"
-              className="card-action"
-            >
-              View rides
-            </button>
-          </div>
-
-          <div className="dashboard-card">
+          <button
+            type="button"
+            className="dashboard-card dashboard-card-button"
+          >
             <span className="card-icon">👤</span>
 
             <h3>Profile</h3>
@@ -150,14 +131,7 @@ function Dashboard({
             <p>
               Manage your account information.
             </p>
-
-            <button
-              type="button"
-              className="card-action"
-            >
-              View profile
-            </button>
-          </div>
+          </button>
         </section>
       </section>
     </main>
