@@ -33,11 +33,9 @@
   align-items: center;
   padding: 7px 14px;
   margin-bottom: 20px;
-
   border-radius: 999px;
   background: #eef4ff;
   color: #2563eb;
-
   font-size: 14px;
   font-weight: 600;
 }
@@ -52,7 +50,6 @@
 .welcome-card p {
   max-width: 480px;
   margin: 18px auto 30px;
-
   color: #6b7280;
   font-size: 17px;
   line-height: 1.6;
@@ -65,15 +62,11 @@
 .primary-button {
   border: none;
   border-radius: 12px;
-
   padding: 14px 24px;
-
   background: #2563eb;
   color: #ffffff;
-
   font-size: 16px;
   font-weight: 600;
-
   cursor: pointer;
 
   transition:
