@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import RequestRide from "./pages/RequestRide.jsx";
 
 import { getMe } from "./services/auth.service.js";
 import {
@@ -12,9 +13,11 @@ import {
 function App() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [page, setPage] = useState("dashboard");
+  const [createdRide, setCreatedRide] = useState(null);
 
   useEffect(() => {
-    const restoreSession = async () => {
+    const checkSession = async () => {
       const token = getAccessToken();
 
       if (!token) {
@@ -24,41 +27,46 @@ function App() {
 
       try {
         const result = await getMe(token);
-
         setUser(result.user);
       } catch (error) {
-        console.error("Session restore failed:", error);
-
+        console.error("Session check failed:", error);
         clearAuth();
-        setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
-    restoreSession();
+    checkSession();
   }, []);
 
   const handleLogin = (loggedInUser) => {
     setUser(loggedInUser);
+    setPage("dashboard");
   };
 
   const handleLogout = () => {
     clearAuth();
     setUser(null);
+    setPage("dashboard");
+  };
+
+  const handleRideCreated = (ride) => {
+    setCreatedRide(ride);
+    setPage("dashboard");
   };
 
   if (loading) {
     return (
-      <main
+      <div
         style={{
           minHeight: "100dvh",
           display: "grid",
           placeItems: "center",
+          fontFamily: "system-ui, sans-serif",
         }}
       >
-        <p>Loading...</p>
-      </main>
+        Loading...
+      </div>
     );
   }
 
@@ -66,10 +74,21 @@ function App() {
     return <Login onLogin={handleLogin} />;
   }
 
+  if (page === "request-ride") {
+    return (
+      <RequestRide
+        onBack={() => setPage("dashboard")}
+        onRideCreated={handleRideCreated}
+      />
+    );
+  }
+
   return (
     <Dashboard
       user={user}
       onLogout={handleLogout}
+      onRequestRide={() => setPage("request-ride")}
+      createdRide={createdRide}
     />
   );
 }
