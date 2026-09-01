@@ -8,6 +8,12 @@ export const apiRequest = async (path, options = {}) => {
     headers = {},
   } = options;
 
+  console.log("API REQUEST:", {
+    method,
+    url: `${API_URL}${path}`,
+    tokenExists: Boolean(token),
+  });
+
   const response = await fetch(`${API_URL}${path}`, {
     method,
     headers: {
@@ -19,6 +25,11 @@ export const apiRequest = async (path, options = {}) => {
   });
 
   const data = await response.json().catch(() => ({}));
+
+  console.log("API RESPONSE:", {
+    status: response.status,
+    data,
+  });
 
   if (!response.ok) {
     throw new Error(data.message || "Something went wrong.");

@@ -11,6 +11,7 @@ import RideRequests from "./components/rides/RideRequests.jsx";
 
 import { useAuth } from "./hooks/useAuth.js";
 import { useRideSocket } from "./hooks/useRideSocket.js";
+import { useRiderLocation } from "./hooks/useRiderLocation.js";
 
 import {
   getActiveRide,
@@ -110,10 +111,23 @@ function App() {
     );
   }, []);
 
-  const { connected } = useRideSocket({
+  const { connected, socket } = useRideSocket({
     token,
     onRideRequested: handleRideRequested,
     onRideAccepted: handleRideAccepted,
+  });
+
+  // =========================
+  // REAL RIDER GPS
+  // =========================
+
+  const {
+    location: riderLocation,
+    gpsError,
+  } = useRiderLocation({
+    socket,
+    enabled:
+      activeRide?.status === "in_progress",
   });
 
   // =========================
@@ -310,6 +324,18 @@ function App() {
         <Stats />
 
         {message && <Message message={message} />}
+
+        {gpsError && (
+          <Message message={gpsError} />
+        )}
+
+        {riderLocation && (
+          <div className="gps-debug">
+            GPS: {riderLocation.latitude.toFixed(6)},
+            {" "}
+            {riderLocation.longitude.toFixed(6)}
+          </div>
+        )}
 
         <ActiveRide
           ride={activeRide}

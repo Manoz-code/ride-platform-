@@ -7,43 +7,73 @@ export const useRideSocket = ({
   onRideRequested,
   onRideAccepted,
 }) => {
-  const [connected, setConnected] = useState(Boolean(token));
+  const [connected, setConnected] = useState(false);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     if (!token) {
+      setSocket(null);
+      setConnected(false);
       return undefined;
     }
 
-    const socket = io(SOCKET_URL, {
+    const newSocket = io(SOCKET_URL, {
       auth: {
         token,
       },
     });
 
-    socket.on("connect", () => {
-      console.log("Socket connected:", socket.id);
+    newSocket.on("connect", () => {
+      console.log(
+        "Socket connected:",
+        newSocket.id
+      );
+
       setConnected(true);
+      setSocket(newSocket);
     });
 
-    socket.on("disconnect", () => {
+    newSocket.on("disconnect", () => {
       console.log("Socket disconnected");
+
       setConnected(false);
     });
 
-    socket.on("connect_error", (error) => {
-      console.error("Socket connection error:", error.message);
-      setConnected(false);
-    });
+    newSocket.on(
+      "connect_error",
+      (error) => {
+        console.error(
+          "Socket connection error:",
+          error.message
+        );
 
-    socket.on("ride:requested", onRideRequested);
-    socket.on("ride:accepted", onRideAccepted);
+        setConnected(false);
+      }
+    );
+
+    newSocket.on(
+      "ride:requested",
+      onRideRequested
+    );
+
+    newSocket.on(
+      "ride:accepted",
+      onRideAccepted
+    );
 
     return () => {
-      socket.disconnect();
+      newSocket.disconnect();
+      setSocket(null);
+      setConnected(false);
     };
-  }, [token, onRideRequested, onRideAccepted]);
+  }, [
+    token,
+    onRideRequested,
+    onRideAccepted,
+  ]);
 
   return {
     connected,
+    socket,
   };
 };

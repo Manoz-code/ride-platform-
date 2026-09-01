@@ -268,7 +268,7 @@ export const acceptRide = async (userId, rideId) => {
     );
 
 console.log(
-  `Emitting ride:accepted to customer user: ${customerUserId}`
+  `Emitting ride:accepted | ride=${ride.id} | customer=${customerUserId} | rider=${rider.id}`
 );
 
 if (customerUserId) {
