@@ -1,31 +1,69 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 
-import { getAccessToken } from "./utils/storage.js";
+import { getMe } from "./services/auth.service.js";
+import {
+  getAccessToken,
+  clearAuth,
+} from "./utils/storage.js";
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(
-    Boolean(getAccessToken())
-  );
-
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      const token = getAccessToken();
+
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const result = await getMe(token);
+
+        setUser(result.user);
+      } catch (error) {
+        console.error("Session restore failed:", error);
+
+        clearAuth();
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    restoreSession();
+  }, []);
 
   const handleLogin = (loggedInUser) => {
     setUser(loggedInUser);
-    setLoggedIn(true);
   };
 
   const handleLogout = () => {
+    clearAuth();
     setUser(null);
-    setLoggedIn(false);
   };
 
-  if (!loggedIn) {
+  if (loading) {
     return (
-      <Login onLogin={handleLogin} />
+      <main
+        style={{
+          minHeight: "100dvh",
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
+        <p>Loading...</p>
+      </main>
     );
+  }
+
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
