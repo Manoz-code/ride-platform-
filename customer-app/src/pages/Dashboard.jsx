@@ -1,4 +1,5 @@
 import { clearAuth } from "../utils/storage.js";
+import "../styles/dashboard.css";
 
 function Dashboard({ user, onLogout }) {
   const handleLogout = () => {
@@ -7,59 +8,84 @@ function Dashboard({ user, onLogout }) {
   };
 
   return (
-    <main
-      style={{
-        minHeight: "100dvh",
-        padding: "30px",
-        maxWidth: "900px",
-        margin: "0 auto",
-      }}
-    >
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "40px",
-        }}
-      >
-        <div>
-          <h1>Ride Platform</h1>
-          <p>Customer Dashboard</p>
+    <main className="dashboard-page">
+      <header className="dashboard-header">
+        <div className="dashboard-brand">
+          <div className="dashboard-brand-icon">R</div>
+
+          <div>
+            <h1>Ride Platform</h1>
+            <p>Customer</p>
+          </div>
         </div>
 
-        <button onClick={handleLogout}>
+        <button
+          type="button"
+          className="logout-button"
+          onClick={handleLogout}
+        >
           Logout
         </button>
       </header>
 
-      <section>
-        <h2>
-          Welcome{user?.email ? `, ${user.email}` : ""}!
-        </h2>
+      <section className="dashboard-content">
+        <div className="dashboard-welcome">
+          <span className="dashboard-badge">Customer Dashboard</span>
 
-        <p>
-          You are successfully signed in.
-        </p>
-
-        <div
-          style={{
-            marginTop: "30px",
-            padding: "30px",
-            border: "1px solid #e5e5e5",
-            borderRadius: "16px",
-          }}
-        >
-          <h3>Ready for a ride?</h3>
+          <h2>
+            Welcome
+            {user?.email ? `, ${user.email.split("@")[0]}` : ""}!
+          </h2>
 
           <p>
-            Request a ride and find a rider near you.
+            Where would you like to go today?
           </p>
-
-          <button>
-            Request a Ride
-          </button>
         </div>
+
+        <section className="request-card">
+          <div className="request-icon">📍</div>
+
+          <div className="request-content">
+            <h3>Ready for a ride?</h3>
+
+            <p>
+              Request a ride and find a nearby rider quickly.
+            </p>
+
+            <button
+              type="button"
+              className="request-button"
+            >
+              Request a Ride
+            </button>
+          </div>
+        </section>
+
+        <section className="dashboard-grid">
+          <div className="dashboard-card">
+            <span className="card-icon">🚗</span>
+            <h3>Book a Ride</h3>
+            <p>
+              Choose your pickup and destination.
+            </p>
+          </div>
+
+          <div className="dashboard-card">
+            <span className="card-icon">📋</span>
+            <h3>My Rides</h3>
+            <p>
+              View your previous and active rides.
+            </p>
+          </div>
+
+          <div className="dashboard-card">
+            <span className="card-icon">👤</span>
+            <h3>Profile</h3>
+            <p>
+              Manage your account information.
+            </p>
+          </div>
+        </section>
       </section>
     </main>
   );

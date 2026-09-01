@@ -1,0 +1,266 @@
+.dashboard-page {
+  min-height: 100dvh;
+  background: #f7f8fa;
+  color: #111827;
+  padding: 24px;
+}
+
+.dashboard-header {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.dashboard-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-brand-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.dashboard-brand h1 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.dashboard-brand p {
+  margin: 3px 0 0;
+  color: #737373;
+  font-size: 12px;
+}
+
+.logout-button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #dedede;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #333333;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.logout-button:hover {
+  background: #f3f4f6;
+}
+
+.dashboard-content {
+  width: 100%;
+  max-width: 1100px;
+  margin: 55px auto 0;
+}
+
+.dashboard-welcome {
+  margin-bottom: 28px;
+}
+
+.dashboard-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #eef0f3;
+  color: #555555;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dashboard-welcome h2 {
+  margin: 14px 0 7px;
+  font-size: 32px;
+  line-height: 1.2;
+  letter-spacing: -0.8px;
+}
+
+.dashboard-welcome p {
+  margin: 0;
+  color: #737373;
+  font-size: 15px;
+}
+
+.request-card {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 28px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.request-icon {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #f1f3f5;
+  font-size: 26px;
+}
+
+.request-content {
+  flex: 1;
+}
+
+.request-content h3 {
+  margin: 0 0 6px;
+  font-size: 19px;
+}
+
+.request-content p {
+  margin: 0;
+  color: #737373;
+  font-size: 14px;
+}
+
+.request-button {
+  margin-top: 18px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 10px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.request-button:hover {
+  background: #252d3d;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.dashboard-card {
+  padding: 23px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+
+.card-icon {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 24px;
+}
+
+.dashboard-card h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.dashboard-card p {
+  margin: 0;
+  color: #737373;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Tablet */
+
+@media (max-width: 800px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-content {
+    margin-top: 40px;
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 520px) {
+  .dashboard-page {
+    padding: 16px;
+  }
+
+  .dashboard-header {
+    align-items: flex-start;
+  }
+
+  .dashboard-brand-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dashboard-brand h1 {
+    font-size: 15px;
+  }
+
+  .logout-button {
+    min-height: 38px;
+    padding: 0 13px;
+  }
+
+  .dashboard-content {
+    margin-top: 35px;
+  }
+
+  .dashboard-welcome h2 {
+    font-size: 25px;
+    letter-spacing: -0.5px;
+  }
+
+  .dashboard-welcome p {
+    font-size: 14px;
+  }
+
+  .request-card {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 22px;
+  }
+
+  .request-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 22px;
+  }
+
+  .request-content {
+    width: 100%;
+  }
+
+  .request-button {
+    width: 100%;
+  }
+
+  .dashboard-card {
+    padding: 20px;
+  }
+}
