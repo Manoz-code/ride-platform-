@@ -1,6 +1,6 @@
-
 import {
   getAvailableRides,
+  getActiveRide,
   acceptRide,
   startRide,
   completeRide,
@@ -21,6 +21,19 @@ const validateRideId = (req, res) => {
   }
 
   return result.data.rideId;
+};
+
+export const getMyActiveRide = async (req, res, next) => {
+  try {
+    const ride = await getActiveRide(req.user.id);
+
+    return res.status(200).json({
+      success: true,
+      ride,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getMyAvailableRides = async (req, res, next) => {

@@ -1,4 +1,3 @@
-
 import pool, { query } from "../../config/database.js";
 import { emitToUser, emitToRiders } from "../../realtime/socket.js";
 
@@ -41,20 +40,6 @@ const getRiderByUserId = async (userId) => {
   return result.rows[0] || null;
 };
 
-const getCustomerUserId = async (customerId) => {
-  const result = await query(
-    `
-      SELECT user_id
-      FROM customers
-      WHERE id = $1
-      LIMIT 1
-    `,
-    [customerId]
-  );
-
-  return result.rows[0]?.user_id || null;
-};
-
 const addRideStatusHistory = async (
   client,
   rideId,
@@ -76,28 +61,6 @@ const addRideStatusHistory = async (
   );
 };
 
-export const getActiveRide = async (userId) => {
-  const rider = await getRiderByUserId(userId);
-
-  if (!rider) {
-    return null;
-  }
-
-  const result = await query(
-    `
-      SELECT
-        ${RIDE_COLUMNS}
-      FROM rides
-      WHERE rider_id = $1
-        AND status IN ('accepted', 'in_progress')
-      ORDER BY accepted_at DESC
-      LIMIT 1
-    `,
-    [rider.id]
-  );
-
-  return result.rows[0] || null;
-};
 /**
  * Get rides currently available for riders.
  */
@@ -184,7 +147,7 @@ export const acceptRide = async (userId, rideId) => {
     }
 
     /**
-     * Prevent rider from accepting multiple active rides.
+     * Prevent one rider from having multiple active rides.
      */
     const activeRideResult = await client.query(
       `
@@ -207,9 +170,7 @@ export const acceptRide = async (userId, rideId) => {
     }
 
     /**
-     * Atomic acceptance:
-     * only one rider can successfully change
-     * requested + unassigned -> accepted.
+     * Atomically claim the requested ride.
      */
     const result = await client.query(
       `
@@ -261,26 +222,32 @@ export const acceptRide = async (userId, rideId) => {
     await client.query("COMMIT");
 
     /**
-     * Notify the customer.
+     * Find the customer's user ID.
      */
-    const customerUserId = await getCustomerUserId(
-      ride.customer_id
+    const customerUserResult = await query(
+      `
+        SELECT user_id
+        FROM customers
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [ride.customer_id]
     );
 
-console.log(
-  `Emitting ride:accepted to customer user: ${customerUserId}`
-);
+    const customerUserId =
+      customerUserResult.rows[0]?.user_id;
 
-if (customerUserId) {
-  emitToUser(customerUserId, "ride:accepted", {
-    ride,
-  });
-} else {
-  console.log("No customer user ID found.");
-}
     /**
-     * Notify connected riders so their available-ride
-     * lists can remove this ride.
+     * Notify the customer in real time.
+     */
+    if (customerUserId) {
+      emitToUser(customerUserId, "ride:accepted", {
+        ride,
+      });
+    }
+
+    /**
+     * Notify other riders that this ride is no longer available.
      */
     emitToRiders("ride:accepted", {
       ride,
@@ -344,11 +311,20 @@ export const startRide = async (userId, rideId) => {
     await client.query("COMMIT");
 
     /**
-     * Notify customer.
+     * Notify customer that the ride has started.
      */
-    const customerUserId = await getCustomerUserId(
-      ride.customer_id
+    const customerUserResult = await query(
+      `
+        SELECT user_id
+        FROM customers
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [ride.customer_id]
     );
+
+    const customerUserId =
+      customerUserResult.rows[0]?.user_id;
 
     if (customerUserId) {
       emitToUser(customerUserId, "ride:started", {
@@ -428,11 +404,20 @@ export const completeRide = async (userId, rideId) => {
     await client.query("COMMIT");
 
     /**
-     * Notify customer.
+     * Notify customer that the ride has completed.
      */
-    const customerUserId = await getCustomerUserId(
-      ride.customer_id
+    const customerUserResult = await query(
+      `
+        SELECT user_id
+        FROM customers
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [ride.customer_id]
     );
+
+    const customerUserId =
+      customerUserResult.rows[0]?.user_id;
 
     if (customerUserId) {
       emitToUser(customerUserId, "ride:completed", {
@@ -450,7 +435,7 @@ export const completeRide = async (userId, rideId) => {
 };
 
 /**
- * Rider cancels an accepted or in-progress ride.
+ * Rider cancels an accepted/in-progress ride.
  */
 export const cancelRide = async (userId, rideId) => {
   const rider = await getRiderByUserId(userId);
@@ -512,17 +497,33 @@ export const cancelRide = async (userId, rideId) => {
     await client.query("COMMIT");
 
     /**
-     * Notify customer.
+     * Notify customer that rider cancelled.
      */
-    const customerUserId = await getCustomerUserId(
-      ride.customer_id
+    const customerUserResult = await query(
+      `
+        SELECT user_id
+        FROM customers
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [ride.customer_id]
     );
+
+    const customerUserId =
+      customerUserResult.rows[0]?.user_id;
 
     if (customerUserId) {
       emitToUser(customerUserId, "ride:cancelled", {
         ride,
       });
     }
+
+    /**
+     * Notify riders so the ride state can be refreshed.
+     */
+    emitToRiders("ride:cancelled", {
+      ride,
+    });
 
     return ride;
   } catch (error) {

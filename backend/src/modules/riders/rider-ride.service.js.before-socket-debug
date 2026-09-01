@@ -76,28 +76,6 @@ const addRideStatusHistory = async (
   );
 };
 
-export const getActiveRide = async (userId) => {
-  const rider = await getRiderByUserId(userId);
-
-  if (!rider) {
-    return null;
-  }
-
-  const result = await query(
-    `
-      SELECT
-        ${RIDE_COLUMNS}
-      FROM rides
-      WHERE rider_id = $1
-        AND status IN ('accepted', 'in_progress')
-      ORDER BY accepted_at DESC
-      LIMIT 1
-    `,
-    [rider.id]
-  );
-
-  return result.rows[0] || null;
-};
 /**
  * Get rides currently available for riders.
  */
@@ -267,17 +245,12 @@ export const acceptRide = async (userId, rideId) => {
       ride.customer_id
     );
 
-console.log(
-  `Emitting ride:accepted to customer user: ${customerUserId}`
-);
+    if (customerUserId) {
+      emitToUser(customerUserId, "ride:accepted", {
+        ride,
+      });
+    }
 
-if (customerUserId) {
-  emitToUser(customerUserId, "ride:accepted", {
-    ride,
-  });
-} else {
-  console.log("No customer user ID found.");
-}
     /**
      * Notify connected riders so their available-ride
      * lists can remove this ride.
@@ -532,3 +505,4 @@ export const cancelRide = async (userId, rideId) => {
     client.release();
   }
 };
+

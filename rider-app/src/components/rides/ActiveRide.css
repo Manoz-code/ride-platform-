@@ -1,0 +1,185 @@
+.active-ride-section {
+  width: 100%;
+}
+
+.active-ride {
+  width: 100%;
+  overflow: hidden;
+}
+
+.active-ride-info {
+  padding: 20px;
+}
+
+.active-ride .ride-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.ride-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.ride-status.accepted {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.ride-status.in_progress {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+/* Route */
+
+.route {
+  width: 100%;
+  margin-bottom: 22px;
+}
+
+.route-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.route-item small {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.route-item strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.route-dot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  border-radius: 50%;
+}
+
+.pickup-dot {
+  background: #16a34a;
+}
+
+.dropoff-dot {
+  background: #dc2626;
+}
+
+.route-line {
+  width: 2px;
+  height: 28px;
+  margin: 4px 0 4px 5px;
+  background: #d1d5db;
+}
+
+/* Buttons */
+
+.active-ride-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.primary-ride-button,
+.cancel-button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 12px;
+  padding: 0 18px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.primary-ride-button {
+  flex: 1;
+  background: #111827;
+  color: white;
+}
+
+.cancel-button {
+  flex: 0 0 auto;
+}
+
+.primary-ride-button:active,
+.cancel-button:active {
+  transform: scale(0.98);
+}
+
+.primary-ride-button:disabled,
+.cancel-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .active-ride-info {
+    padding: 16px;
+  }
+
+  .active-ride .ride-top {
+    margin-bottom: 14px;
+  }
+
+  .ride-service {
+    font-size: 14px;
+  }
+
+  .ride-status {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+
+  .route-item strong {
+    font-size: 15px;
+  }
+
+  .active-ride-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .primary-ride-button,
+  .cancel-button {
+    width: 100%;
+    min-height: 50px;
+  }
+}
+
+/* Very small phones */
+
+@media (max-width: 380px) {
+  .active-ride-info {
+    padding: 14px;
+  }
+
+  .route-item strong {
+    font-size: 14px;
+  }
+
+  .primary-ride-button,
+  .cancel-button {
+    min-height: 48px;
+    font-size: 14px;
+  }
+}

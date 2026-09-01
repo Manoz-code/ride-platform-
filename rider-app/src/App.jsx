@@ -1,132 +1,148 @@
-import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
+import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 
-const API_URL = "http://localhost:5000/api/v1";
-const SOCKET_URL = "http://localhost:5000";
+import LoginCard from "./components/auth/LoginCard.jsx";
+import Message from "./components/common/Message.jsx";
+import Stats from "./components/dashboard/Stats.jsx";
+import WelcomeCard from "./components/dashboard/WelcomeCard.jsx";
+import Header from "./components/layout/Header.jsx";
+import ActiveRide from "./components/rides/ActiveRide.jsx";
+import RideRequests from "./components/rides/RideRequests.jsx";
+
+import { useAuth } from "./hooks/useAuth.js";
+import { useRideSocket } from "./hooks/useRideSocket.js";
+
+import {
+  getActiveRide,
+  acceptRide,
+  startRide,
+  completeRide,
+  cancelRide,
+} from "./services/ride.service.js";
+
+import {
+  updateAvailability,
+  getAvailableRides,
+} from "./services/rider.service.js";
 
 function App() {
-  const [token, setToken] = useState("");
+  const { token, login, loading: authLoading } = useAuth();
+
   const [online, setOnline] = useState(false);
   const [rides, setRides] = useState([]);
-  const [connected, setConnected] = useState(false);
+  const [activeRide, setActiveRide] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Temporary development login.
-  // We will replace this with a proper login screen later.
-  const login = async () => {
-    try {
-      setLoading(true);
-      setMessage("");
+  // =========================
+  // LOAD ACTIVE RIDE
+  // =========================
 
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone: "+9779800000098",
-          password: "TestRider123",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.accessToken) {
-        throw new Error(data.message || "Login failed.");
-      }
-
-      setToken(data.accessToken);
-      setMessage("Logged in successfully.");
-    } catch (error) {
-      setMessage(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Connect to Socket.IO after login.
-  useEffect(() => {
+  const loadActiveRide = useCallback(async () => {
     if (!token) return;
 
-    const socket = io(SOCKET_URL, {
-      auth: {
-        token,
-      },
-    });
+    try {
+      const data = await getActiveRide(token);
 
-    socket.on("connect", () => {
-      console.log("Socket connected:", socket.id);
-      setConnected(true);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("Socket disconnected");
-      setConnected(false);
-    });
-
-    socket.on("connect_error", (error) => {
-      console.error("Socket connection error:", error.message);
-      setConnected(false);
-    });
-
-    socket.on("ride:requested", (payload) => {
-      console.log("New ride received:", payload);
-
-      if (payload?.ride) {
-        setRides((currentRides) => {
-          const exists = currentRides.some(
-            (ride) => ride.id === payload.ride.id
-          );
-
-          if (exists) {
-            return currentRides;
-          }
-
-          return [...currentRides, payload.ride];
-        });
-      }
-    });
-
-    socket.on("ride:accepted", (payload) => {
-      if (!payload?.ride) return;
-
-      setRides((currentRides) =>
-        currentRides.filter((ride) => ride.id !== payload.ride.id)
-      );
-    });
-
-    return () => {
-      socket.disconnect();
-    };
+      setActiveRide(data?.ride || null);
+    } catch (error) {
+      console.error("Failed to load active ride:", error);
+    }
   }, [token]);
 
-  // Load rides that already exist before socket connection.
-  const loadAvailableRides = async () => {
+  // =========================
+  // LOAD AVAILABLE RIDES
+  // =========================
+
+  const loadAvailableRides = useCallback(async () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`${API_URL}/riders/rides`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to load rides.");
-      }
+      const data = await getAvailableRides(token);
 
       setRides(data.rides || []);
     } catch (error) {
       setMessage(error.message);
     }
+  }, [token]);
+
+  // =========================
+  // LOAD RIDER STATE
+  // =========================
+
+  useEffect(() => {
+    if (!token) return;
+
+    loadActiveRide();
+  }, [token, loadActiveRide]);
+
+  // =========================
+  // SOCKET: RIDE REQUESTED
+  // =========================
+
+  const handleRideRequested = useCallback((payload) => {
+    if (!payload?.ride) return;
+
+    setRides((currentRides) => {
+      const exists = currentRides.some(
+        (ride) => ride.id === payload.ride.id
+      );
+
+      if (exists) {
+        return currentRides;
+      }
+
+      return [...currentRides, payload.ride];
+    });
+  }, []);
+
+  // =========================
+  // SOCKET: RIDE ACCEPTED
+  // =========================
+
+  const handleRideAccepted = useCallback((payload) => {
+    if (!payload?.ride) return;
+
+    setRides((currentRides) =>
+      currentRides.filter(
+        (ride) => ride.id !== payload.ride.id
+      )
+    );
+  }, []);
+
+  const { connected } = useRideSocket({
+    token,
+    onRideRequested: handleRideRequested,
+    onRideAccepted: handleRideAccepted,
+  });
+
+  // =========================
+  // LOGIN
+  // =========================
+
+  const handleLogin = async () => {
+    try {
+      setMessage("");
+
+      await login();
+
+      setMessage("Logged in successfully.");
+    } catch (error) {
+      setMessage(error.message);
+    }
   };
 
-  // Change rider availability.
+  // =========================
+  // CHANGE AVAILABILITY
+  // =========================
+
   const changeAvailability = async () => {
+    console.log("CHANGE AVAILABILITY CLICKED", {
+      tokenExists: Boolean(token),
+      online,
+      loading,
+    });
+
     if (!token) return;
 
     const nextStatus = online ? "offline" : "online";
@@ -135,26 +151,12 @@ function App() {
       setLoading(true);
       setMessage("");
 
-      const response = await fetch(`${API_URL}/riders/availability`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          availabilityStatus: nextStatus,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to update availability.");
-      }
+      await updateAvailability(token, nextStatus);
 
       setOnline(nextStatus === "online");
 
       if (nextStatus === "online") {
+        await loadActiveRide();
         await loadAvailableRides();
       } else {
         setRides([]);
@@ -166,61 +168,51 @@ function App() {
     }
   };
 
-  // Accept a ride.
-  const acceptRide = async (rideId) => {
+  // =========================
+  // ACCEPT RIDE
+  // =========================
+
+  const handleAcceptRide = async (rideId) => {
     try {
       setLoading(true);
       setMessage("");
 
-      const response = await fetch(
-        `${API_URL}/riders/rides/${rideId}/accept`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to accept ride.");
-      }
+      const data = await acceptRide(token, rideId);
 
       setRides((currentRides) =>
-        currentRides.filter((ride) => ride.id !== rideId)
+        currentRides.filter(
+          (ride) => ride.id !== rideId
+        )
       );
+
+      setActiveRide(data.ride);
 
       setMessage("Ride accepted successfully.");
     } catch (error) {
       setMessage(error.message);
+
+      // If the backend says the rider already has
+      // an active ride, load that ride into the UI.
+      if (error?.status === 409) {
+        await loadActiveRide();
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Start a ride.
-  const startRide = async (rideId) => {
+  // =========================
+  // START RIDE
+  // =========================
+
+  const handleStartRide = async (rideId) => {
     try {
       setLoading(true);
       setMessage("");
 
-      const response = await fetch(
-        `${API_URL}/riders/rides/${rideId}/start`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const data = await startRide(token, rideId);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to start ride.");
-      }
+      setActiveRide(data.ride);
 
       setMessage("Ride started successfully.");
     } catch (error) {
@@ -230,29 +222,28 @@ function App() {
     }
   };
 
-  // Complete a ride.
-  const completeRide = async (rideId) => {
+  // =========================
+  // COMPLETE RIDE
+  // =========================
+
+  const handleCompleteRide = async (rideId) => {
     try {
       setLoading(true);
       setMessage("");
 
-      const response = await fetch(
-        `${API_URL}/riders/rides/${rideId}/complete`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const data = await completeRide(token, rideId);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to complete ride.");
-      }
+      setActiveRide(null);
 
       setMessage("Ride completed successfully.");
+
+      if (data?.ride) {
+        setRides((currentRides) =>
+          currentRides.filter(
+            (ride) => ride.id !== data.ride.id
+          )
+        );
+      }
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -260,142 +251,80 @@ function App() {
     }
   };
 
+  // =========================
+  // CANCEL RIDE
+  // =========================
+
+  const handleCancelRide = async (rideId) => {
+    try {
+      setLoading(true);
+      setMessage("");
+
+      await cancelRide(token, rideId);
+
+      setActiveRide(null);
+
+      setMessage("Ride cancelled successfully.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =========================
+  // LOGIN SCREEN
+  // =========================
+
+  if (!token) {
+    return (
+      <div className="app">
+        <main className="dashboard">
+          <LoginCard
+            loading={authLoading}
+            onLogin={handleLogin}
+          />
+
+          {message && <Message message={message} />}
+        </main>
+      </div>
+    );
+  }
+
+  // =========================
+  // RIDER DASHBOARD
+  // =========================
+
   return (
     <div className="app">
-      <header className="header">
-        <div>
-          <h1>Rider App</h1>
-          <p>Ride Platform</p>
-        </div>
-
-        <div className="header-right">
-          <span className={`connection ${connected ? "connected" : ""}`}>
-            {connected ? "● Connected" : "● Disconnected"}
-          </span>
-
-          <button
-            className={`status-button ${online ? "online" : "offline"}`}
-            onClick={changeAvailability}
-            disabled={!token || loading}
-          >
-            <span className="status-dot"></span>
-            {online ? "Online" : "Offline"}
-          </button>
-        </div>
-      </header>
+      <Header
+        connected={connected}
+        online={online}
+        loading={loading}
+        onToggleAvailability={changeAvailability}
+      />
 
       <main className="dashboard">
-        {!token ? (
-          <section className="login-card">
-            <p className="eyebrow">RIDER LOGIN</p>
-            <h2>Welcome, Rider 👋</h2>
-            <p>
-              Login to connect to the ride platform and receive ride
-              requests.
-            </p>
+        <WelcomeCard online={online} />
 
-            <button
-              className="primary-button"
-              onClick={login}
-              disabled={loading}
-            >
-              {loading ? "Logging in..." : "Login as Test Rider"}
-            </button>
-          </section>
-        ) : (
-          <>
-            <section className="welcome-card">
-              <p className="eyebrow">RIDER DASHBOARD</p>
+        <Stats />
 
-              <h2>Welcome back 👋</h2>
+        {message && <Message message={message} />}
 
-              <p>
-                {online
-                  ? "You are online and ready to receive rides."
-                  : "Go online to start receiving rides."}
-              </p>
-            </section>
+        <ActiveRide
+          ride={activeRide}
+          loading={loading}
+          onStart={handleStartRide}
+          onComplete={handleCompleteRide}
+          onCancel={handleCancelRide}
+        />
 
-            <section className="stats">
-              <div className="stat-card">
-                <span>Today's rides</span>
-                <strong>0</strong>
-              </div>
-
-              <div className="stat-card">
-                <span>Today's earnings</span>
-                <strong>Rs. 0</strong>
-              </div>
-            </section>
-
-            {message && <div className="message">{message}</div>}
-
-            <section className="rides-section">
-              <div className="section-heading">
-                <div>
-                  <p className="eyebrow">REQUESTS</p>
-                  <h2>Available Rides</h2>
-                </div>
-
-                <span className="ride-count">
-                  {rides.length}
-                </span>
-              </div>
-
-              {!online ? (
-                <div className="empty-state">
-                  <div className="empty-icon">🛵</div>
-                  <h3>You're offline</h3>
-                  <p>
-                    Go online to receive nearby ride requests.
-                  </p>
-                </div>
-              ) : rides.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon">📍</div>
-                  <h3>No rides yet</h3>
-                  <p>
-                    New ride requests will appear here automatically.
-                  </p>
-                </div>
-              ) : (
-                <div className="ride-list">
-                  {rides.map((ride) => (
-                    <div className="ride-card" key={ride.id}>
-                      <div className="ride-top">
-                        <span className="ride-service">
-                          🛵 {ride.service_type}
-                        </span>
-
-                        <span className="ride-status">
-                          {ride.status}
-                        </span>
-                      </div>
-
-                      <div className="location">
-                        <strong>Pickup</strong>
-                        <span>{ride.pickup_address}</span>
-                      </div>
-
-                      <div className="location">
-                        <strong>Dropoff</strong>
-                        <span>{ride.dropoff_address}</span>
-                      </div>
-
-                      <button
-                        className="accept-button"
-                        onClick={() => acceptRide(ride.id)}
-                        disabled={loading}
-                      >
-                        Accept Ride
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </>
-        )}
+        <RideRequests
+          rides={rides}
+          online={online}
+          loading={loading}
+          onAccept={handleAcceptRide}
+        />
       </main>
     </div>
   );

@@ -13,6 +13,7 @@ import {
 
 import {
   getMyAvailableRides,
+  getMyActiveRide,
   acceptMyRide,
   startMyRide,
   completeMyRide,
@@ -60,6 +61,13 @@ router.patch(
 );
 
 // Rider ride management
+
+router.get(
+  "/rides/active",
+  requireAuth,
+  requireRole("rider"),
+  getMyActiveRide
+);
 
 router.get(
   "/rides",
