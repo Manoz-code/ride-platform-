@@ -8,6 +8,13 @@ import {
   loginUser,
 } from "./auth.service.js";
 
+import {
+  googleLoginSchema,
+} from "./google.validation.js";
+
+import {
+  loginWithGoogle,
+} from "./google-auth.service.js";
 export const register = async (req, res, next) => {
   try {
     const data = registerSchema.parse(req.body);
@@ -56,4 +63,33 @@ export const me = (req, res) => {
     success: true,
     user: req.user,
   });
+};
+
+export const googleLogin = async (req, res, next) => {
+  try {
+    const data = googleLoginSchema.parse(req.body);
+
+    const result = await loginWithGoogle({
+      idToken: data.idToken,
+      userAgent: req.get("user-agent"),
+      ipAddress: req.ip,
+    });
+
+    if (!result) {
+      return res.status(401).json({
+        success: false,
+        message: "Google account is not allowed to sign in.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: result.user,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      refreshTokenExpiresAt: result.expiresAt,
+    });
+  } catch (error) {
+    next(error);
+  }
 };

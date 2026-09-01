@@ -32,3 +32,12 @@ export const getMe = (token) => {
     token,
   });
 };
+
+export const loginWithGoogle = (idToken) => {
+  return apiRequest("/auth/google", {
+    method: "POST",
+    body: {
+      idToken,
+    },
+  });
+};
