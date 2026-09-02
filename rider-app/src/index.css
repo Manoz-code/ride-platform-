@@ -1,3 +1,12 @@
+
+/* =========================
+   GLOBAL
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
 html,
 body,
 #root {
@@ -9,5 +18,599 @@ html {
 }
 
 body {
+  margin: 0;
   min-width: 320px;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  background: #f5f7fb;
+  color: #172033;
 }
+
+button {
+  font: inherit;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.header {
+  min-height: 76px;
+  padding: 12px 32px;
+  background: white;
+  border-bottom: 1px solid #e7eaf0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.header p {
+  margin: 3px 0 0;
+  color: #7a8292;
+  font-size: 13px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.connection {
+  color: #9aa1ae;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.connection.connected {
+  color: #18864b;
+}
+
+/* =========================
+   AVAILABILITY
+========================= */
+
+.status-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.status-button.online {
+  background: #e8f8ef;
+  color: #18864b;
+}
+
+.status-button.offline {
+  background: #f0f2f5;
+  color: #687080;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+.dashboard {
+  width: min(100%, 900px);
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+/* =========================
+   LOGIN / WELCOME
+========================= */
+
+.login-card,
+.welcome-card {
+  background: white;
+  border-radius: 18px;
+  padding: 28px;
+  border: 1px solid #e7eaf0;
+}
+
+.login-card h2,
+.welcome-card h2 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.login-card p:last-of-type,
+.welcome-card p:last-child {
+  color: #697386;
+}
+
+.primary-button {
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 18px;
+  cursor: pointer;
+  font-weight: 700;
+  margin-top: 12px;
+  background: #172033;
+  color: white;
+}
+
+/* =========================
+   TYPOGRAPHY
+========================= */
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #788195;
+}
+
+/* =========================
+   STATS
+========================= */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #e7eaf0;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.stat-card span {
+  display: block;
+  color: #737c8e;
+  font-size: 14px;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 26px;
+}
+
+/* =========================
+   MESSAGES
+========================= */
+
+.message {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid #e7eaf0;
+  border-radius: 10px;
+  color: #596273;
+  font-size: 14px;
+}
+
+.gps-debug {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #eef5ff;
+  color: #49627d;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+/* =========================
+   RIDE SECTIONS
+========================= */
+
+.rides-section {
+  margin-top: 30px;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.ride-count {
+  min-width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #172033;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.empty-state {
+  margin-top: 14px;
+  background: white;
+  border: 1px solid #e7eaf0;
+  border-radius: 18px;
+  padding: 45px 20px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 38px;
+}
+
+.empty-state h3 {
+  margin: 12px 0 6px;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #737c8e;
+}
+
+/* =========================
+   RIDE LIST
+========================= */
+
+.ride-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+/* =========================
+   RIDE CARD
+========================= */
+
+.ride-card {
+  background: white;
+  border: 1px solid #e7eaf0;
+  border-radius: 18px;
+  padding: 20px;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.ride-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+}
+
+/* Latest / newest request */
+
+.ride-card-new {
+  border: 2px solid #172033;
+  box-shadow: 0 8px 28px rgba(23, 32, 51, 0.1);
+}
+
+/* =========================
+   RIDE REQUEST HEADER
+========================= */
+
+.ride-request-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ride-request-type {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.ride-service-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #f2f4f7;
+  font-size: 21px;
+}
+
+.ride-request-type > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ride-service {
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.ride-request-time {
+  color: #7a8292;
+  font-size: 12px;
+}
+
+.new-ride-badge {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #172033;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+/* =========================
+   RIDE ROUTE
+========================= */
+
+.ride-route {
+  margin-bottom: 18px;
+}
+
+.route-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.route-marker {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.route-marker.pickup {
+  background: #172033;
+  color: white;
+}
+
+.route-marker.destination {
+  border: 1px solid #d9dde4;
+  background: white;
+  color: #172033;
+}
+
+.route-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.route-label {
+  color: #8a92a1;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.route-content strong {
+  color: #172033;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.route-connector {
+  width: 30px;
+  height: 22px;
+  display: flex;
+  justify-content: center;
+}
+
+.route-connector span {
+  width: 2px;
+  height: 100%;
+  background: #d9dde4;
+}
+
+/* =========================
+   RIDE META
+========================= */
+
+.ride-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ride-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: #f7f8fa;
+}
+
+.ride-meta-item span {
+  color: #8a92a1;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.ride-meta-item strong {
+  color: #172033;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+/* =========================
+   ACCEPT RIDE
+========================= */
+
+.accept-button {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 11px;
+  padding: 12px 18px;
+  background: #172033;
+  color: white;
+  cursor: pointer;
+  font-weight: 800;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.accept-button:hover {
+  transform: translateY(-1px);
+}
+
+.accept-arrow {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.accept-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* =========================
+   ACTIVE RIDE
+========================= */
+
+.active-ride {
+  border: 2px solid #172033;
+}
+
+.active-ride-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.primary-ride-button {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 18px;
+  background: #172033;
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.cancel-button {
+  width: 100%;
+  border: 1px solid #e1a0a0;
+  border-radius: 10px;
+  padding: 12px 18px;
+  background: white;
+  color: #a33;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 600px) {
+  .header {
+    padding: 12px 16px;
+  }
+
+  .header-right {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+  }
+
+  .dashboard {
+    padding: 20px 14px 40px;
+  }
+
+  .login-card,
+  .welcome-card {
+    padding: 22px;
+  }
+
+  .login-card h2,
+  .welcome-card h2 {
+    font-size: 25px;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .ride-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .ride-card-new {
+    border-width: 2px;
+  }
+
+  .ride-request-header {
+    margin-bottom: 16px;
+  }
+
+  .ride-service-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .route-content strong {
+    font-size: 13px;
+  }
+
+  .ride-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
